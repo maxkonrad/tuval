@@ -1,4 +1,4 @@
-# SPICE Weaver ⚡
+# Tuval⚡
 
 Web tabanlı, görsel layout verisini ve SPICE mantığını tek bir JSON dosyasında birleştiren modern bir devre analiz platformu.
 
