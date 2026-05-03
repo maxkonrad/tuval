@@ -38,11 +38,13 @@ const componentLayer = document.getElementById('component-layer')!;
 const wireLayer = document.getElementById('wire-layer')!;
 const paletteItems = document.querySelectorAll('.palette-item');
 
-// Icons
-const icons = {
-  V: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><path d="M12 8v8M8 12h8"/></svg>`,
-  R: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12h4l2-4 4 8 4-8 4 8 2-4h2"/></svg>`,
-  GND: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4v8M6 12h12M8 16h8M10 20h4"/></svg>`
+// Icons — LTspice-style schematic symbols
+const icons: Record<string, string> = {
+  V: `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="16" y1="2" x2="16" y2="8"/><circle cx="16" cy="16" r="8"/><line x1="16" y1="24" x2="16" y2="30"/><line x1="14" y1="13" x2="18" y2="13"/><line x1="16" y1="11" x2="16" y2="15"/><line x1="14" y1="19" x2="18" y2="19"/></svg>`,
+  R: `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="16" y1="2" x2="16" y2="8"/><rect x="10" y="8" width="12" height="16" rx="1"/><line x1="16" y1="24" x2="16" y2="30"/></svg>`,
+  C: `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="16" y1="2" x2="16" y2="12"/><line x1="8" y1="12" x2="24" y2="12"/><line x1="8" y1="18" x2="24" y2="18"/><line x1="16" y1="18" x2="16" y2="30"/></svg>`,
+  L: `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="16" y1="2" x2="16" y2="6"/><path d="M16 6 C20 6, 22 9, 22 11 C22 13, 20 14, 16 14" fill="none"/><path d="M16 14 C20 14, 22 17, 22 19 C22 21, 20 22, 16 22" fill="none"/><line x1="16" y1="22" x2="16" y2="30"/></svg>`,
+  GND: `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="16" y1="4" x2="16" y2="14"/><line x1="6" y1="14" x2="26" y2="14"/><line x1="9" y1="19" x2="23" y2="19"/><line x1="12" y1="24" x2="20" y2="24"/></svg>`
 };
 
 // Drag from Palette
