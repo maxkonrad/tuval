@@ -1,0 +1,198 @@
+{
+  "id": "circuit-analyzer",
+  "version": 2,
+  "generated": "2026-05-03",
+  "machine": {
+    "id": "circuit-analyzer",
+    "initial": "phase_1_foundations",
+    "context": {
+      "task_1": { "retries": 0, "maxRetries": 4, "code": true },
+      "task_2": { "retries": 0, "maxRetries": 4, "code": true },
+      "task_3": { "retries": 0, "maxRetries": 4, "code": true },
+      "task_4": { "retries": 0, "maxRetries": 3, "code": true },
+      "task_5": { "retries": 0, "maxRetries": 4, "code": true },
+      "errors": []
+    },
+    "setup": {
+      "guards": {
+        "task1RetriesRemaining": "context.task_1.retries < context.task_1.maxRetries",
+        "task2RetriesRemaining": "context.task_2.retries < context.task_2.maxRetries",
+        "task3RetriesRemaining": "context.task_3.retries < context.task_3.maxRetries",
+        "task4RetriesRemaining": "context.task_4.retries < context.task_4.maxRetries",
+        "task5RetriesRemaining": "context.task_5.retries < context.task_5.maxRetries",
+        "noErrors": "context.errors.length === 0"
+      },
+      "actions": {
+        "incrementTask1Retries": "assign task_1.retries += 1",
+        "incrementTask2Retries": "assign task_2.retries += 1",
+        "incrementTask3Retries": "assign task_3.retries += 1",
+        "incrementTask4Retries": "assign task_4.retries += 1",
+        "incrementTask5Retries": "assign task_5.retries += 1",
+        "recordError": "append taskId to context.errors"
+      }
+    },
+    "states": {
+      "phase_1_foundations": {
+        "type": "parallel",
+        "states": {
+          "task_1": {
+            "initial": "do-work",
+            "states": {
+              "do-work": {
+                "on": {
+                  "TASK_1.DONE": "qa",
+                  "TASK_1.BLOCKED": "blocked",
+                  "TASK_1.WIP": "tripped"
+                }
+              },
+              "qa": {
+                "on": {
+                  "TASK_1.PASS": "passed",
+                  "TASK_1.FAIL": [
+                    { "target": "do-work", "guard": "task1RetriesRemaining", "actions": "incrementTask1Retries" },
+                    { "target": "tripped", "actions": "recordError" }
+                  ]
+                }
+              },
+              "blocked": {
+                "on": { "TASK_1.UNBLOCKED": "resume" }
+              },
+              "resume": { "type": "history" },
+              "passed": { "type": "final" },
+              "tripped": { "type": "final" }
+            }
+          },
+          "task_2": {
+            "initial": "do-work",
+            "states": {
+              "do-work": {
+                "on": {
+                  "TASK_2.DONE": "qa",
+                  "TASK_2.BLOCKED": "blocked",
+                  "TASK_2.WIP": "tripped"
+                }
+              },
+              "qa": {
+                "on": {
+                  "TASK_2.PASS": "passed",
+                  "TASK_2.FAIL": [
+                    { "target": "do-work", "guard": "task2RetriesRemaining", "actions": "incrementTask2Retries" },
+                    { "target": "tripped", "actions": "recordError" }
+                  ]
+                }
+              },
+              "blocked": {
+                "on": { "TASK_2.UNBLOCKED": "resume" }
+              },
+              "resume": { "type": "history" },
+              "passed": { "type": "final" },
+              "tripped": { "type": "final" }
+            }
+          },
+          "task_3": {
+            "initial": "do-work",
+            "states": {
+              "do-work": {
+                "on": {
+                  "TASK_3.DONE": "qa",
+                  "TASK_3.BLOCKED": "blocked",
+                  "TASK_3.WIP": "tripped"
+                }
+              },
+              "qa": {
+                "on": {
+                  "TASK_3.PASS": "passed",
+                  "TASK_3.FAIL": [
+                    { "target": "do-work", "guard": "task3RetriesRemaining", "actions": "incrementTask3Retries" },
+                    { "target": "tripped", "actions": "recordError" }
+                  ]
+                }
+              },
+              "blocked": {
+                "on": { "TASK_3.UNBLOCKED": "resume" }
+              },
+              "resume": { "type": "history" },
+              "passed": { "type": "final" },
+              "tripped": { "type": "final" }
+            }
+          }
+        },
+        "onDone": [
+          { "target": "phase_2_advanced", "guard": "noErrors" },
+          { "target": "tripped" }
+        ]
+      },
+      "phase_2_advanced": {
+        "initial": "task_4",
+        "states": {
+          "task_4": {
+            "initial": "do-work",
+            "states": {
+              "do-work": {
+                "on": { "DONE": "qa", "BLOCKED": "blocked", "WIP": "tripped" }
+              },
+              "qa": {
+                "on": {
+                  "PASS": "passed",
+                  "FAIL": [
+                    { "target": "do-work", "guard": "task4RetriesRemaining", "actions": "incrementTask4Retries" },
+                    { "target": "tripped", "actions": "recordError" }
+                  ]
+                }
+              },
+              "blocked": { "on": { "UNBLOCKED": "resume" } },
+              "resume": { "type": "history" },
+              "passed": { "type": "final" },
+              "tripped": { "type": "final" }
+            },
+            "onDone": [
+              { "target": "phase_passed", "guard": "noErrors" },
+              { "target": "phase_tripped" }
+            ]
+          },
+          "phase_passed": { "type": "final" },
+          "phase_tripped": { "type": "final" }
+        },
+        "onDone": [
+          { "target": "phase_3_integration", "guard": "noErrors" },
+          { "target": "tripped" }
+        ]
+      },
+      "phase_3_integration": {
+        "initial": "task_5",
+        "states": {
+          "task_5": {
+            "initial": "do-work",
+            "states": {
+              "do-work": {
+                "on": { "DONE": "qa", "BLOCKED": "blocked", "WIP": "tripped" }
+              },
+              "qa": {
+                "on": {
+                  "PASS": "passed",
+                  "FAIL": [
+                    { "target": "do-work", "guard": "task5RetriesRemaining", "actions": "incrementTask5Retries" },
+                    { "target": "tripped", "actions": "recordError" }
+                  ]
+                }
+              },
+              "blocked": { "on": { "UNBLOCKED": "resume" } },
+              "resume": { "type": "history" },
+              "passed": { "type": "final" },
+              "tripped": { "type": "final" }
+            },
+            "onDone": [
+              { "target": "phase_passed", "guard": "noErrors" },
+              { "target": "phase_tripped" }
+            ]
+          },
+          "phase_passed": { "type": "final" },
+          "phase_tripped": { "type": "final" }
+        },
+        "onDone": "complete"
+      },
+      "complete": { "type": "final" },
+      "tripped": { "type": "final" }
+    }
+  }
+}
