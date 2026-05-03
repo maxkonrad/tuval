@@ -15,7 +15,7 @@ JSON şemasını (id, type, x, y, connections) okuyup geçerli bir SPICE netlist
 - [ ] Dangling node veya hatalı bağlantılar durumunda anlamlı hatalar fırlatılması.
 - [ ] Fonksiyonun birim testlerinin yazılması ve geçmesi.
 
-## 2. [ ] ngspice Execution Runner
+## 2. [x] ngspice Execution Runner
 **Stories:** 4
 **TDD:** no (integration)
 ### What to build
