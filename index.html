@@ -23,6 +23,10 @@
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
             Export JSON
           </button>
+          <button id="btn-simulate" class="btn primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Simüle Et
+          </button>
         </div>
       </header>
 
@@ -79,11 +83,27 @@
           </div>
         </aside>
 
-        <main class="canvas-container" id="canvas-container">
-          <div class="canvas-bg"></div>
-          <svg id="wire-layer" class="wire-layer"></svg>
-          <div id="component-layer" class="component-layer"></div>
-        </main>
+        <div class="canvas-results-wrapper">
+          <main class="canvas-container" id="canvas-container">
+            <div class="canvas-bg"></div>
+            <svg id="wire-layer" class="wire-layer"></svg>
+            <div id="component-layer" class="component-layer"></div>
+          </main>
+          
+          <div class="results-panel" id="results-panel">
+            <div class="results-header">
+              <h3>&#9608; Oscilloscope</h3>
+              <button id="btn-close-results" class="btn-icon">&times;</button>
+            </div>
+            <div class="results-status" id="results-status"></div>
+            <div class="netlist-preview" id="netlist-preview"></div>
+            <div class="crt-bezel">
+              <div class="crt-screen">
+                <canvas id="plot-canvas"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
       
       <input type="file" id="file-input" style="display: none;" accept=".json" />

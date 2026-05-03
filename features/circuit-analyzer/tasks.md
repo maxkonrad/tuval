@@ -44,7 +44,7 @@ Transpiler modülünün `spice_params` objesini okuyup `KEY=VALUE` formatında S
 - [ ] Transpiler'ın bileşenlerdeki `spice_params` sözlüğünü okuyarak `KEY=VALUE` (örn. `W=1u L=0.5u`) stringlerine çevirebilmesi.
 - [ ] UI üzerinde kullanıcıların seçili bileşene key/value çiftleri ekleyebileceği bir arayüz bileşeninin oluşturulması.
 
-## 5. [ ] E2E Simulation & Plotting UI
+## 5. [x] E2E Simulation & Plotting UI
 **Stories:** 4, 5, 6
 **TDD:** no (UI integration)
 ### What to build
