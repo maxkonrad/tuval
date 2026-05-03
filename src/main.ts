@@ -541,160 +541,249 @@ document.getElementById('btn-close-results')?.addEventListener('click', () => {
 
 // ── CRT Oscilloscope Renderer ──
 
+let lastSimResult: SimulationResult | null = null;
+let cursorX: number | null = null;
+
+const plotCanvas = document.getElementById('plot-canvas') as HTMLCanvasElement;
+
+plotCanvas.addEventListener('mousemove', (e) => {
+  if (!lastSimResult) return;
+  const rect = plotCanvas.getBoundingClientRect();
+  cursorX = e.clientX - rect.left;
+  renderCRTPlot(lastSimResult);
+});
+
+plotCanvas.addEventListener('mouseleave', () => {
+  cursorX = null;
+  if (lastSimResult) renderCRTPlot(lastSimResult);
+});
+
+function engFormat(val: number): string {
+  const abs = Math.abs(val);
+  if (abs === 0) return '0';
+  if (abs >= 1e6)  return (val / 1e6).toFixed(2)  + 'M';
+  if (abs >= 1e3)  return (val / 1e3).toFixed(2)  + 'k';
+  if (abs >= 1)    return val.toFixed(3);
+  if (abs >= 1e-3) return (val * 1e3).toFixed(2)  + 'm';
+  if (abs >= 1e-6) return (val * 1e6).toFixed(2)  + 'µ';
+  if (abs >= 1e-9) return (val * 1e9).toFixed(2)  + 'n';
+  return val.toExponential(2);
+}
+
+interface SignalInfo {
+  name: string;
+  color: string;
+  yMin: number;
+  yMax: number;
+  yRange: number;
+  values: number[];
+}
+
 function renderCRTPlot(result: SimulationResult) {
-  const canvas = document.getElementById('plot-canvas') as HTMLCanvasElement;
+  lastSimResult = result;
+  const canvas = plotCanvas;
   const ctx = canvas.getContext('2d')!;
-  
-  // High-DPI support
+
   const dpr = window.devicePixelRatio || 1;
   const rect = canvas.getBoundingClientRect();
   canvas.width = rect.width * dpr;
   canvas.height = rect.height * dpr;
   ctx.scale(dpr, dpr);
-  
+
   const W = rect.width;
   const H = rect.height;
-  const PAD = 30;
-  const plotW = W - PAD * 2;
-  const plotH = H - PAD * 2;
-  
-  // Black background
+  const PAD_L = 60;
+  const PAD_R = 20;
+  const PAD_T = 20;
+  const PAD_B = 28;
+  const plotW = W - PAD_L - PAD_R;
+  const plotH = H - PAD_T - PAD_B;
+
+  // Background
   ctx.fillStyle = '#001a00';
   ctx.fillRect(0, 0, W, H);
-  
-  // Grid lines (dim green, like a real CRT graticule)
-  ctx.strokeStyle = 'rgba(51, 255, 51, 0.12)';
-  ctx.lineWidth = 1;
-  
-  const gridCols = 10;
-  const gridRows = 8;
-  
-  for (let i = 0; i <= gridCols; i++) {
-    const x = PAD + (plotW / gridCols) * i;
-    ctx.beginPath();
-    ctx.moveTo(x, PAD);
-    ctx.lineTo(x, PAD + plotH);
-    ctx.stroke();
-  }
-  
-  for (let i = 0; i <= gridRows; i++) {
-    const y = PAD + (plotH / gridRows) * i;
-    ctx.beginPath();
-    ctx.moveTo(PAD, y);
-    ctx.lineTo(PAD + plotW, y);
-    ctx.stroke();
-  }
-  
-  // Center crosshair (brighter)
-  ctx.strokeStyle = 'rgba(51, 255, 51, 0.25)';
-  ctx.beginPath();
-  ctx.moveTo(PAD + plotW / 2, PAD);
-  ctx.lineTo(PAD + plotW / 2, PAD + plotH);
-  ctx.moveTo(PAD, PAD + plotH / 2);
-  ctx.lineTo(PAD + plotW, PAD + plotH / 2);
-  ctx.stroke();
-  
-  // Plot each signal (skip first variable which is usually time/frequency)
+
   if (result.data.length === 0) return;
-  
-  const numSignals = result.variables.length - 1; // skip X axis
-  const colors = [
-    '#33ff33', // classic phosphor green
-    '#66ff66',
-    '#99ff99',
-  ];
-  
-  // Find data ranges
+
+  // Data ranges
   const xValues = result.data.map(row => row[0]);
   const xMin = Math.min(...xValues);
   const xMax = Math.max(...xValues);
   const xRange = xMax - xMin || 1;
-  
+
+  const numSignals = result.variables.length - 1;
+  const colors = ['#33ff33', '#ff3333', '#3399ff', '#ffcc00', '#ff66ff', '#66ffcc'];
+
+  // Build signal info — use global Y range across all signals
+  let globalYMin = Infinity;
+  let globalYMax = -Infinity;
+  const signals: SignalInfo[] = [];
   for (let sig = 0; sig < numSignals; sig++) {
-    const yValues = result.data.map(row => row[sig + 1]);
-    const yMin = Math.min(...yValues);
-    const yMax = Math.max(...yValues);
-    const yRange = yMax - yMin || 1;
-    
-    const color = colors[sig % colors.length];
-    
-    // Phosphor glow (wide, blurry pass)
-    ctx.save();
-    ctx.shadowColor = color;
-    ctx.shadowBlur = 12;
-    ctx.strokeStyle = color;
-    ctx.globalAlpha = 0.3;
-    ctx.lineWidth = 6;
-    ctx.beginPath();
-    
-    result.data.forEach((row, i) => {
-      const x = PAD + ((row[0] - xMin) / xRange) * plotW;
-      const y = PAD + plotH - ((row[sig + 1] - yMin) / yRange) * plotH;
-      if (i === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
+    const values = result.data.map(row => row[sig + 1]);
+    const yMin = Math.min(...values);
+    const yMax = Math.max(...values);
+    if (yMin < globalYMin) globalYMin = yMin;
+    if (yMax > globalYMax) globalYMax = yMax;
+    signals.push({
+      name: result.variables[sig + 1] || `CH${sig + 1}`,
+      color: colors[sig % colors.length],
+      yMin, yMax, yRange: yMax - yMin || 1,
+      values
     });
-    ctx.stroke();
-    ctx.restore();
-    
-    // Core trace (sharp, bright)
-    ctx.save();
-    ctx.shadowColor = color;
-    ctx.shadowBlur = 4;
-    ctx.strokeStyle = color;
-    ctx.globalAlpha = 0.9;
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    
-    result.data.forEach((row, i) => {
-      const x = PAD + ((row[0] - xMin) / xRange) * plotW;
-      const y = PAD + plotH - ((row[sig + 1] - yMin) / yRange) * plotH;
-      if (i === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
-    });
-    ctx.stroke();
-    ctx.restore();
-    
-    // Bright center line (hotspot)
-    ctx.save();
-    ctx.strokeStyle = '#ffffff';
-    ctx.globalAlpha = 0.15;
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    
-    result.data.forEach((row, i) => {
-      const x = PAD + ((row[0] - xMin) / xRange) * plotW;
-      const y = PAD + plotH - ((row[sig + 1] - yMin) / yRange) * plotH;
-      if (i === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
-    });
-    ctx.stroke();
-    ctx.restore();
   }
-  
-  // Axis labels (dim green)
-  ctx.fillStyle = 'rgba(51, 255, 51, 0.6)';
-  ctx.font = '10px "JetBrains Mono", monospace';
-  ctx.textAlign = 'center';
-  
-  // X axis labels
-  for (let i = 0; i <= 4; i++) {
-    const val = xMin + (xRange / 4) * i;
-    const x = PAD + (plotW / 4) * i;
-    ctx.fillText(val.toExponential(1), x, H - 6);
+  // Add 10% padding to global Y range
+  const globalYRange = globalYMax - globalYMin || 1;
+  const yPad = globalYRange * 0.1;
+  const yAxisMin = globalYMin - yPad;
+  const yAxisMax = globalYMax + yPad;
+  const yAxisRange = yAxisMax - yAxisMin;
+
+  // ── Grid ──
+  const gridCols = 10;
+  const gridRows = 8;
+
+  ctx.strokeStyle = 'rgba(51, 255, 51, 0.1)';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= gridCols; i++) {
+    const x = PAD_L + (plotW / gridCols) * i;
+    ctx.beginPath(); ctx.moveTo(x, PAD_T); ctx.lineTo(x, PAD_T + plotH); ctx.stroke();
   }
-  
-  // Y axis label
+  for (let i = 0; i <= gridRows; i++) {
+    const y = PAD_T + (plotH / gridRows) * i;
+    ctx.beginPath(); ctx.moveTo(PAD_L, y); ctx.lineTo(PAD_L + plotW, y); ctx.stroke();
+  }
+
+  // Center crosshair
+  ctx.strokeStyle = 'rgba(51, 255, 51, 0.2)';
+  ctx.beginPath();
+  ctx.moveTo(PAD_L + plotW / 2, PAD_T); ctx.lineTo(PAD_L + plotW / 2, PAD_T + plotH);
+  ctx.moveTo(PAD_L, PAD_T + plotH / 2); ctx.lineTo(PAD_L + plotW, PAD_T + plotH / 2);
+  ctx.stroke();
+
+  // ── Y Axis Labels ──
+  ctx.fillStyle = 'rgba(51, 255, 51, 0.5)';
+  ctx.font = '9px "JetBrains Mono", monospace';
   ctx.textAlign = 'right';
-  ctx.fillText(result.variables[0] || 'x', PAD + plotW, H - 6);
-  
-  // Signal legend
-  ctx.textAlign = 'left';
-  for (let sig = 0; sig < numSignals; sig++) {
-    const color = colors[sig % colors.length];
-    ctx.fillStyle = color;
-    ctx.shadowColor = color;
-    ctx.shadowBlur = 4;
-    ctx.fillText(result.variables[sig + 1] || `ch${sig + 1}`, PAD + 4, PAD - 6 - sig * 14);
+  for (let i = 0; i <= gridRows; i++) {
+    const y = PAD_T + (plotH / gridRows) * i;
+    const val = yAxisMax - (yAxisRange / gridRows) * i;
+    ctx.fillText(engFormat(val), PAD_L - 4, y + 3);
+  }
+
+  // ── X Axis Labels ──
+  ctx.textAlign = 'center';
+  const xTicks = 5;
+  for (let i = 0; i <= xTicks; i++) {
+    const val = xMin + (xRange / xTicks) * i;
+    const x = PAD_L + (plotW / xTicks) * i;
+    ctx.fillText(engFormat(val) + 's', x, H - 4);
+  }
+
+  // ── Draw Signals ──
+  function xToPixel(xVal: number) { return PAD_L + ((xVal - xMin) / xRange) * plotW; }
+  function yToPixel(yVal: number) { return PAD_T + plotH - ((yVal - yAxisMin) / yAxisRange) * plotH; }
+
+  for (const sig of signals) {
+    // Glow pass
+    ctx.save();
+    ctx.shadowColor = sig.color; ctx.shadowBlur = 10;
+    ctx.strokeStyle = sig.color; ctx.globalAlpha = 0.25; ctx.lineWidth = 5;
+    ctx.beginPath();
+    result.data.forEach((row, i) => {
+      const px = xToPixel(row[0]);
+      const py = yToPixel(sig.values[i]);
+      i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+    });
+    ctx.stroke(); ctx.restore();
+
+    // Core trace
+    ctx.save();
+    ctx.shadowColor = sig.color; ctx.shadowBlur = 3;
+    ctx.strokeStyle = sig.color; ctx.globalAlpha = 0.9; ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    result.data.forEach((row, i) => {
+      const px = xToPixel(row[0]);
+      const py = yToPixel(sig.values[i]);
+      i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+    });
+    ctx.stroke(); ctx.restore();
+  }
+
+  // ── Legend with min/max/Vpp ──
+  ctx.font = '10px "JetBrains Mono", monospace';
+  const legendX = PAD_L + plotW - 10;
+  ctx.textAlign = 'right';
+  signals.forEach((sig, idx) => {
+    const ly = PAD_T + 14 + idx * 36;
+    
+    // Signal name
+    ctx.fillStyle = sig.color;
+    ctx.shadowColor = sig.color; ctx.shadowBlur = 4;
+    ctx.fillText(sig.name, legendX, ly);
     ctx.shadowBlur = 0;
+
+    // Stats
+    ctx.fillStyle = 'rgba(51, 255, 51, 0.45)';
+    ctx.font = '9px "JetBrains Mono", monospace';
+    const vpp = sig.yMax - sig.yMin;
+    ctx.fillText(`min:${engFormat(sig.yMin)}  max:${engFormat(sig.yMax)}  Vpp:${engFormat(vpp)}`, legendX, ly + 12);
+    ctx.font = '10px "JetBrains Mono", monospace';
+  });
+
+  // ── Mouse Cursor Crosshair ──
+  if (cursorX !== null && cursorX >= PAD_L && cursorX <= PAD_L + plotW) {
+    // Vertical cursor line
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(cursorX, PAD_T);
+    ctx.lineTo(cursorX, PAD_T + plotH);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+
+    // Find nearest data point
+    const cursorXRatio = (cursorX - PAD_L) / plotW;
+    const cursorTime = xMin + cursorXRatio * xRange;
+    let nearestIdx = 0;
+    let minDist = Infinity;
+    xValues.forEach((xv, i) => {
+      const d = Math.abs(xv - cursorTime);
+      if (d < minDist) { minDist = d; nearestIdx = i; }
+    });
+
+    // Time readout at top
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+    ctx.font = '10px "JetBrains Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(`t = ${engFormat(xValues[nearestIdx])}s`, cursorX, PAD_T - 4);
+
+    // Value readouts per signal
+    signals.forEach((sig, idx) => {
+      const val = sig.values[nearestIdx];
+      const py = yToPixel(val);
+
+      // Dot on trace
+      ctx.beginPath();
+      ctx.arc(cursorX, py, 4, 0, Math.PI * 2);
+      ctx.fillStyle = sig.color;
+      ctx.shadowColor = sig.color; ctx.shadowBlur = 8;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // Value label
+      const labelX = cursorX + (cursorX > PAD_L + plotW / 2 ? -10 : 10);
+      ctx.textAlign = cursorX > PAD_L + plotW / 2 ? 'right' : 'left';
+      ctx.fillStyle = '#000';
+      const text = `${engFormat(val)}`;
+      const metrics = ctx.measureText(text);
+      ctx.fillRect(labelX - 2, py - 7 + idx * 16, metrics.width + 4, 14);
+      ctx.fillStyle = sig.color;
+      ctx.font = '10px "JetBrains Mono", monospace';
+      ctx.fillText(text, labelX, py + 4 + idx * 16);
+    });
   }
 }
+
