@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { parseNgspiceOutput, runSimulation } from './ngspiceRunner';
 
 describe('ngspiceRunner', () => {
-  it('should parse valid ngspice output', () => {
+  it('should parse valid ngspice raw text output', () => {
     const rawOutput = `
       No. of Data Rows : 3
       Index   time            V(node1)
@@ -30,26 +30,27 @@ describe('ngspiceRunner', () => {
     expect(() => parseNgspiceOutput(rawOutput)).toThrowError(/Engine reported an error/);
   });
   
-  it('should simulate a successful run using the mock API', async () => {
-    const validNetlist = `
-      * Test Circuit
-      V1 node1 0 5V
-      R1 node1 0 1k
-      .end
-    `;
+  it('should run a real transient simulation via spicey', async () => {
+    const netlist = [
+      '* Simple RC Circuit',
+      'v1 1 0 dc 5',
+      'r1 1 2 1k',
+      'c1 2 0 1u',
+      '.tran 0.001 0.01',
+      '.end'
+    ].join('\n');
     
-    const result = await runSimulation(validNetlist);
+    const result = await runSimulation(netlist);
+    
     expect(result.variables).toContain("time");
+    expect(result.variables.length).toBeGreaterThanOrEqual(2);
     expect(result.data.length).toBeGreaterThan(0);
-  });
-  
-  it('should simulate a failure when the netlist contains syntax errors', async () => {
-    const invalidNetlist = `
-      * Test Circuit
-      ERROR: bad syntax
-      .end
-    `;
     
-    await expect(runSimulation(invalidNetlist)).rejects.toThrow(/Simulation failed due to syntax error/);
+    // First time step should be 0
+    expect(result.data[0][0]).toBe(0);
+  });
+
+  it('should throw NgspiceError for empty netlist', async () => {
+    await expect(runSimulation('')).rejects.toThrow(/Empty SPICE netlist/);
   });
 });

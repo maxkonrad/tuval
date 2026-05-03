@@ -1,6 +1,7 @@
 export interface Circuit {
   title?: string;
   components: any[];
+  analysis?: string; // e.g. ".tran 0.001 0.01" or ".ac dec 100 1 100k"
 }
 
 export function transpileToSpice(circuit: Circuit): string {
@@ -40,7 +41,10 @@ export function transpileToSpice(circuit: Circuit): string {
       throw new Error(`Dangling node detected: ${node}`);
     }
   }
-  
+  // Add analysis directive
+  const analysis = circuit.analysis || ".tran 0.001 0.05";
+  lines.push(analysis);
+
   lines.push(".end");
   
   return lines.join("\n");
