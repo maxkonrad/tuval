@@ -35,7 +35,7 @@ Kullanıcıların devre elemanlarını sürükleyip bırakabileceği, bağlantı
 - [ ] Çizilen devrenin "id, type, x, y, connections" içeren JSON formatında dışa aktarılabilmesi.
 - [ ] Aynı formatta bir JSON dosyasının yüklenerek canvas üzerinde görselleştirilebilmesi.
 
-## 4. [ ] Advanced `spice_params` Support
+## 4. [x] Advanced `spice_params` Support
 **Stories:** 3
 **TDD:** yes
 ### What to build

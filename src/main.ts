@@ -17,6 +17,7 @@ interface ComponentState {
   value: string;
   x: number;
   y: number;
+  spice_params?: Record<string, string>;
   el: HTMLElement;
 }
 
@@ -26,6 +27,7 @@ const components = new Map<string, ComponentState>();
 const wires = new Map<string, Wire>();
 let drawingWire: { source: PortRef, startX: number, startY: number } | null = null;
 let draggedComponent: { id: string, offsetX: number, offsetY: number } | null = null;
+let selectedComponentId: string | null = null;
 
 // DOM Elements
 const canvasContainer = document.getElementById('canvas-container')!;
@@ -102,9 +104,13 @@ function createComponent(type: string, value: string, x: number, y: number, forc
     input.addEventListener('mousedown', e => e.stopPropagation());
   }
 
-  // Node Dragging
+  // Node Dragging and Selection
   el.addEventListener('mousedown', e => {
     if ((e.target as HTMLElement).classList.contains('port')) return;
+    
+    // Select component
+    selectComponent(id);
+
     draggedComponent = {
       id,
       offsetX: e.clientX - el.offsetLeft,
@@ -114,8 +120,64 @@ function createComponent(type: string, value: string, x: number, y: number, forc
 
   componentLayer.appendChild(el);
   
-  components.set(id, { id, type, value, x, y, el });
+  components.set(id, { id, type, value, x, y, spice_params: {}, el });
 }
+
+function selectComponent(id: string) {
+  selectedComponentId = id;
+  const comp = components.get(id);
+  
+  document.querySelectorAll('.circuit-node').forEach(n => {
+    (n as HTMLElement).style.borderColor = 'var(--border-color)';
+  });
+  
+  if (comp) {
+    comp.el.style.borderColor = 'var(--accent-color)';
+    renderPropertiesPanel(comp);
+  }
+}
+
+function renderPropertiesPanel(comp: ComponentState) {
+  const panel = document.getElementById('properties-panel')!;
+  panel.style.display = 'block';
+  document.getElementById('prop-target-id')!.innerText = `Editing: ${comp.id}`;
+  
+  const list = document.getElementById('prop-params-list')!;
+  list.innerHTML = '';
+  
+  if (comp.spice_params) {
+    Object.entries(comp.spice_params).forEach(([key, val]) => {
+      const item = document.createElement('div');
+      item.className = 'param-item';
+      item.innerHTML = `
+        <span>${key}=${val}</span>
+        <button class="btn-remove" data-key="${key}">×</button>
+      `;
+      item.querySelector('.btn-remove')?.addEventListener('click', () => {
+        delete comp.spice_params![key];
+        renderPropertiesPanel(comp);
+      });
+      list.appendChild(item);
+    });
+  }
+}
+
+document.getElementById('btn-add-param')?.addEventListener('click', () => {
+  if (!selectedComponentId) return;
+  const comp = components.get(selectedComponentId);
+  if (!comp) return;
+  
+  const keyInput = document.getElementById('new-param-key') as HTMLInputElement;
+  const valInput = document.getElementById('new-param-val') as HTMLInputElement;
+  
+  if (keyInput.value && valInput.value) {
+    if (!comp.spice_params) comp.spice_params = {};
+    comp.spice_params[keyInput.value] = valInput.value;
+    keyInput.value = '';
+    valInput.value = '';
+    renderPropertiesPanel(comp);
+  }
+});
 
 function createPort(parent: HTMLElement, compId: string, portId: string, positionClass: string) {
   const port = document.createElement('div');
@@ -308,7 +370,8 @@ function exportJSON() {
         value: c.value,
         x: c.x,
         y: c.y,
-        connections
+        connections,
+        spice_params: c.spice_params
       };
     }),
     wires: Array.from(wires.values()) // Save wires for visual reconstruction
@@ -333,6 +396,12 @@ function importJSON(data: any) {
   if (data.components) {
     data.components.forEach((c: any) => {
       createComponent(c.type, c.value || '', c.x, c.y, c.id);
+      
+      const comp = components.get(c.id);
+      if (comp && c.spice_params) {
+        comp.spice_params = c.spice_params;
+      }
+      
       const match = c.id.match(/\d+/);
       if (match) {
         maxIdNum = Math.max(maxIdNum, parseInt(match[0], 10));

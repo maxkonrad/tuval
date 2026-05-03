@@ -53,4 +53,28 @@ describe('JSON-SPICE Transpiler', () => {
     
     expect(() => transpileToSpice(danglingCircuit)).toThrowError("Dangling node detected: node2");
   });
+
+  it('should format spice_params as KEY=VALUE pairs in the output string', () => {
+    const circuitWithParams = {
+      title: "Params Circuit",
+      components: [
+        { 
+          id: "M1", 
+          value: "BSIM4", 
+          connections: ["nd", "ng", "ns", "nb"],
+          spice_params: {
+            "W": "1u",
+            "L": "0.5u"
+          }
+        },
+        { id: "R1", value: "1k", connections: ["nd", "0"] },
+        { id: "R2", value: "1k", connections: ["ng", "0"] },
+        { id: "R3", value: "1k", connections: ["ns", "0"] },
+        { id: "R4", value: "1k", connections: ["nb", "0"] }
+      ]
+    };
+    
+    const spiceOutput = transpileToSpice(circuitWithParams);
+    expect(spiceOutput).toContain("M1 nd ng ns nb BSIM4 W=1u L=0.5u");
+  });
 });

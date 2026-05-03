@@ -12,7 +12,7 @@ export function transpileToSpice(circuit: Circuit): string {
   const nodeCounts: Record<string, number> = {};
 
   for (const comp of circuit.components) {
-    const { id, value, connections } = comp;
+    const { id, value, connections, spice_params } = comp;
     
     if (!connections || connections.length < 2) {
       throw new Error(`Component ${id} has insufficient connections. Expected at least 2.`);
@@ -22,9 +22,17 @@ export function transpileToSpice(circuit: Circuit): string {
       nodeCounts[node] = (nodeCounts[node] || 0) + 1;
     });
 
-    // Basic SPICE format: ID NODE1 NODE2 VALUE
     const connStr = connections.join(" ");
-    lines.push(`${id} ${connStr} ${value || ""}`.trim());
+    let compStr = `${id} ${connStr} ${value || ""}`.trim();
+
+    if (spice_params) {
+      const paramsStr = Object.entries(spice_params)
+        .map(([k, v]) => `${k}=${v}`)
+        .join(" ");
+      compStr += ` ${paramsStr}`;
+    }
+
+    lines.push(compStr);
   }
 
   for (const [node, count] of Object.entries(nodeCounts)) {
