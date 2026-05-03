@@ -25,7 +25,7 @@ Hazır bir SPICE string'ini alıp ngspice motoruna (WASM veya batch API) gönder
 - [ ] ngspice'dan dönen raw metin çıktısının ayrıştırılarak grafik çizimi için uygun yapısal bir veri formatına dönüştürülmesi.
 - [ ] Hatalı SPICE string'i gönderildiğinde motorun hata durumunu yönetmesi.
 
-## 3. [ ] Circuit Canvas UI (JSON Export/Import)
+## 3. [x] Circuit Canvas UI (JSON Export/Import)
 **Stories:** 1, 2
 **TDD:** no (UI)
 ### What to build

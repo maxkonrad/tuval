@@ -2,12 +2,77 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>temp-app</title>
+    <title>JSON-SPICE Web Circuit Analyzer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   </head>
   <body>
-    <div id="app"></div>
+    <div id="app">
+      <header class="topbar">
+        <div class="logo">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          <span>SPICE Weaver</span>
+        </div>
+        <div class="actions">
+          <button id="btn-import" class="btn secondary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            Import JSON
+          </button>
+          <button id="btn-export" class="btn secondary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+            Export JSON
+          </button>
+        </div>
+      </header>
+
+      <div class="main-workspace">
+        <aside class="sidebar">
+          <h3>Components</h3>
+          <p class="subtitle">Drag to canvas</p>
+          
+          <div class="component-palette">
+            <div class="palette-item" draggable="true" data-type="V" data-value="5V">
+              <div class="icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><path d="M12 8v8M8 12h8"/></svg>
+              </div>
+              <div class="details">
+                <span class="name">Voltage Source</span>
+                <span class="default-val">5V</span>
+              </div>
+            </div>
+            
+            <div class="palette-item" draggable="true" data-type="R" data-value="1k">
+              <div class="icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12h4l2-4 4 8 4-8 4 8 2-4h2"/></svg>
+              </div>
+              <div class="details">
+                <span class="name">Resistor</span>
+                <span class="default-val">1k</span>
+              </div>
+            </div>
+            
+            <div class="palette-item" draggable="true" data-type="GND" data-value="0">
+              <div class="icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4v8M6 12h12M8 16h8M10 20h4"/></svg>
+              </div>
+              <div class="details">
+                <span class="name">Ground (0)</span>
+                <span class="default-val">0</span>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        <main class="canvas-container" id="canvas-container">
+          <div class="canvas-bg"></div>
+          <svg id="wire-layer" class="wire-layer"></svg>
+          <div id="component-layer" class="component-layer"></div>
+        </main>
+      </div>
+      
+      <input type="file" id="file-input" style="display: none;" accept=".json" />
+    </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
