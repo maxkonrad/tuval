@@ -40,11 +40,11 @@ const paletteItems = document.querySelectorAll('.palette-item');
 
 // Icons — LTspice-style schematic symbols
 const icons: Record<string, string> = {
-  V: `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="16" y1="2" x2="16" y2="8"/><circle cx="16" cy="16" r="8"/><line x1="16" y1="24" x2="16" y2="30"/><line x1="14" y1="13" x2="18" y2="13"/><line x1="16" y1="11" x2="16" y2="15"/><line x1="14" y1="19" x2="18" y2="19"/></svg>`,
-  R: `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="16" y1="2" x2="16" y2="8"/><rect x="10" y="8" width="12" height="16" rx="1"/><line x1="16" y1="24" x2="16" y2="30"/></svg>`,
-  C: `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="16" y1="2" x2="16" y2="12"/><line x1="8" y1="12" x2="24" y2="12"/><line x1="8" y1="18" x2="24" y2="18"/><line x1="16" y1="18" x2="16" y2="30"/></svg>`,
-  L: `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="16" y1="2" x2="16" y2="6"/><path d="M16 6 C20 6, 22 9, 22 11 C22 13, 20 14, 16 14" fill="none"/><path d="M16 14 C20 14, 22 17, 22 19 C22 21, 20 22, 16 22" fill="none"/><line x1="16" y1="22" x2="16" y2="30"/></svg>`,
-  GND: `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="16" y1="4" x2="16" y2="14"/><line x1="6" y1="14" x2="26" y2="14"/><line x1="9" y1="19" x2="23" y2="19"/><line x1="12" y1="24" x2="20" y2="24"/></svg>`
+  V: `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="16" y1="2" x2="16" y2="8"/><circle cx="16" cy="16" r="8"/><line x1="16" y1="24" x2=[...]
+  R: `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="16" y1="2" x2="16" y2="8"/><rect x="10" y="8" width="12" height="16" rx="1"/><line [...]
+  C: `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="16" y1="2" x2="16" y2="12"/><line x1="8" y1="12" x2="24" y2="12"/><line x1="8" y1="[...]
+  L: `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="16" y1="2" x2="16" y2="6"/><path d="M16 6 C20 6, 22 9, 22 11 C22 13, 20 14, 16 14" [...]
+  GND: `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="16" y1="4" x2="16" y2="14"/><line x1="6" y1="14" x2="26" y2="14"/><line x1="9" y1[...]
 };
 
 // Drag from Palette
@@ -761,32 +761,28 @@ function renderCRTPlot(result: SimulationResult) {
     ctx.fillText(`t = ${engFormat(xValues[nearestIdx])}s`, cursorX, PAD_T - 4);
 
     // Value readouts per signal
-    // Value readouts per signal
-if (cursorX !== null) {  // Add this check
-  signals.forEach((sig, idx) => {
-    const val = sig.values[nearestIdx];
-    const py = yToPixel(val);
+    signals.forEach((sig, idx) => {
+      const val = sig.values[nearestIdx];
+      const py = yToPixel(val);
 
-    // Dot on trace
-    ctx.beginPath();
-    ctx.arc(cursorX, py, 4, 0, Math.PI * 2);
-    ctx.fillStyle = sig.color;
-    ctx.shadowColor = sig.color; ctx.shadowBlur = 8;
-    ctx.fill();
-    ctx.shadowBlur = 0;
+      // Dot on trace
+      ctx.beginPath();
+      ctx.arc(cursorX, py, 4, 0, Math.PI * 2);
+      ctx.fillStyle = sig.color;
+      ctx.shadowColor = sig.color; ctx.shadowBlur = 8;
+      ctx.fill();
+      ctx.shadowBlur = 0;
 
-    // Value label
-    const labelX = cursorX + (cursorX > PAD_L + plotW / 2 ? -10 : 10);
-    ctx.textAlign = cursorX > PAD_L + plotW / 2 ? 'right' : 'left';
-    ctx.fillStyle = '#000';
-    const text = `${engFormat(val)}`;
-    const metrics = ctx.measureText(text);
-    ctx.fillRect(labelX - 2, py - 7 + idx * 16, metrics.width + 4, 14);
-    ctx.fillStyle = sig.color;
-    ctx.font = '10px "JetBrains Mono", monospace';
-    ctx.fillText(text, labelX, py + 4 + idx * 16);
-  });
-}
+      // Value label
+      const labelX = cursorX + (cursorX > PAD_L + plotW / 2 ? -10 : 10);
+      ctx.textAlign = cursorX > PAD_L + plotW / 2 ? 'right' : 'left';
+      ctx.fillStyle = '#000';
+      const text = `${engFormat(val)}`;
+      const metrics = ctx.measureText(text);
+      ctx.fillRect(labelX - 2, py - 7 + idx * 16, metrics.width + 4, 14);
+      ctx.fillStyle = sig.color;
+      ctx.font = '10px "JetBrains Mono", monospace';
+      ctx.fillText(text, labelX, py + 4 + idx * 16);
+    });
   }
 }
-
