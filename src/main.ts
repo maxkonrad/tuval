@@ -761,29 +761,32 @@ function renderCRTPlot(result: SimulationResult) {
     ctx.fillText(`t = ${engFormat(xValues[nearestIdx])}s`, cursorX, PAD_T - 4);
 
     // Value readouts per signal
-    signals.forEach((sig, idx) => {
-      const val = sig.values[nearestIdx];
-      const py = yToPixel(val);
+    // Value readouts per signal
+if (cursorX !== null) {  // Add this check
+  signals.forEach((sig, idx) => {
+    const val = sig.values[nearestIdx];
+    const py = yToPixel(val);
 
-      // Dot on trace
-      ctx.beginPath();
-      ctx.arc(cursorX, py, 4, 0, Math.PI * 2);
-      ctx.fillStyle = sig.color;
-      ctx.shadowColor = sig.color; ctx.shadowBlur = 8;
-      ctx.fill();
-      ctx.shadowBlur = 0;
+    // Dot on trace
+    ctx.beginPath();
+    ctx.arc(cursorX, py, 4, 0, Math.PI * 2);
+    ctx.fillStyle = sig.color;
+    ctx.shadowColor = sig.color; ctx.shadowBlur = 8;
+    ctx.fill();
+    ctx.shadowBlur = 0;
 
-      // Value label
-      const labelX = cursorX + (cursorX > PAD_L + plotW / 2 ? -10 : 10);
-      ctx.textAlign = cursorX > PAD_L + plotW / 2 ? 'right' : 'left';
-      ctx.fillStyle = '#000';
-      const text = `${engFormat(val)}`;
-      const metrics = ctx.measureText(text);
-      ctx.fillRect(labelX - 2, py - 7 + idx * 16, metrics.width + 4, 14);
-      ctx.fillStyle = sig.color;
-      ctx.font = '10px "JetBrains Mono", monospace';
-      ctx.fillText(text, labelX, py + 4 + idx * 16);
-    });
+    // Value label
+    const labelX = cursorX + (cursorX > PAD_L + plotW / 2 ? -10 : 10);
+    ctx.textAlign = cursorX > PAD_L + plotW / 2 ? 'right' : 'left';
+    ctx.fillStyle = '#000';
+    const text = `${engFormat(val)}`;
+    const metrics = ctx.measureText(text);
+    ctx.fillRect(labelX - 2, py - 7 + idx * 16, metrics.width + 4, 14);
+    ctx.fillStyle = sig.color;
+    ctx.font = '10px "JetBrains Mono", monospace';
+    ctx.fillText(text, labelX, py + 4 + idx * 16);
+  });
+}
   }
 }
 
